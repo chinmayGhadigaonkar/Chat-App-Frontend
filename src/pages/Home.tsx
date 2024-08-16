@@ -35,7 +35,7 @@ const Home = () => {
         width: "100%",
         display: "flex",
         flexDirection: { xs: "column", md: "row" }, // stack vertically on small screens, horizontally on medium and up
-        maxHeight: "100vh", // ensure full height on small screens 
+        maxHeight: "100vh", // ensure full height on small screens
       }}
     >
       <Box
@@ -44,10 +44,15 @@ const Home = () => {
           display: { xs: rightSide ? "none" : "block", md: "block" },
           // hide on extra small screens
           maxHeight: "100vh", // ensure full height on small screens
+          height: "100vh", // ensure full height on small screens
         }}
       >
         <Navabar />
-        <ListDividers setRightSide={setRightSide} chatId={chatId} setChatId={setChatId} />
+        <ListDividers
+          setRightSide={setRightSide}
+          chatId={chatId}
+          setChatId={setChatId}
+        />
       </Box>
       <Box
         sx={{
@@ -57,7 +62,11 @@ const Home = () => {
           display: { xs: !rightSide ? "none" : "block", md: "block" },
         }}
       >
-        <Chat rightSide={rightSide}  setRightSide={setRightSide} chatId={chatId}    />
+        <Chat
+          rightSide={rightSide}
+          setRightSide={setRightSide}
+          chatId={chatId}
+        />
       </Box>
     </Box>
   );

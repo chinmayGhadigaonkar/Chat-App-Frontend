@@ -1,11 +1,13 @@
-import { Menu, MenuItem } from "@mui/material";
-import React, { useRef } from "react";
+import { Menu, MenuItem, CircularProgress } from "@mui/material";
+import React, { useEffect, useRef } from "react";
 import ImageIcon from "@mui/icons-material/Image";
 import AudiotrackIcon from "@mui/icons-material/Audiotrack";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import DescriptionIcon from "@mui/icons-material/Description";
 import { enqueueSnackbar } from "notistack";
 import { useSendAttachmentMutation } from "../../redux/api/api";
+import { useSocket } from "../../utils/SocketIo";
+import { NEW_ATTACHEMENT } from "../../utils/event";
 
 interface FileMenuProps {
   anchorEl: HTMLElement | null;
@@ -13,7 +15,24 @@ interface FileMenuProps {
   setAnchorEl: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
   chatId: string;
   setMessages: React.Dispatch<React.SetStateAction<[]>>;
+  members: string[];
 }
+
+const CustomMenuItem = ({ onClick, icon: Icon, text }) => (
+  <MenuItem
+    sx={{
+      fontWeight: 700,
+      color: "#333",
+      "&:hover": {
+        backgroundColor: "#e0e0e0",
+      },
+    }}
+    onClick={onClick}
+  >
+    <Icon fontSize="small" sx={{ marginRight: 1 }} />
+    {text}
+  </MenuItem>
+);
 
 const FileMenu = ({
   anchorEl,
@@ -21,6 +40,7 @@ const FileMenu = ({
   setAnchorEl,
   chatId,
   setMessages,
+  members,
 }: FileMenuProps) => {
   const handleClose = () => {
     setAnchorEl(null);
@@ -32,6 +52,7 @@ const FileMenu = ({
   const audioRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const socket = useSocket();
 
   const handleOnFileChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -58,18 +79,28 @@ const FileMenu = ({
 
       const res = await sendAttachment(formData);
 
-      // console.log(res.data);
-
       if (res.data) {
-        setMessages((prev) => [...prev, res.data.messages]);
+        socket.socket?.emit(NEW_ATTACHEMENT, {
+          chatId: chatId,
+          members: members,
+          attachment: res.data.messages.attachment,
+        });
+
         enqueueSnackbar("Files uploaded successfully", { variant: "success" });
       } else {
         enqueueSnackbar("Error uploading files", { variant: "error" });
       }
     } catch (error) {
-      enqueueSnackbar("Error uploading files", { variant: "error" });
+      const errorMessage =
+        error.response?.data?.message || "Error uploading files";
+      enqueueSnackbar(errorMessage, { variant: "error" });
     } finally {
       setLoading(false);
+      // Reset input fields
+      if (imageRef.current) imageRef.current.value = "";
+      if (audioRef.current) audioRef.current.value = "";
+      if (videoRef.current) videoRef.current.value = "";
+      if (fileRef.current) fileRef.current.value = "";
     }
   };
 
@@ -78,12 +109,44 @@ const FileMenu = ({
   const selectVideoRef = () => videoRef.current?.click();
   const selectFileRef = () => fileRef.current?.click();
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  const handleMessage = React.useCallback(
+    (data: any) => {
+      console.log(data.realTimeData);
+
+      setMessages((prev) => [...prev, data.realTimeData]);
+    },
+    [chatId]
+  );
+
+  useEffect(() => {
+    if (socket.socket) {
+      socket.socket.on(NEW_ATTACHEMENT, handleMessage);
+      return () => {
+        socket?.socket?.off(NEW_ATTACHEMENT, handleMessage);
+      };
+    }
+  }, [socket.socket, handleMessage]);
+
+  React.useEffect(() => {
+    return () => {
+      setMessages([]);
+    };
+  }, [chatId]);
 
   return (
     <div>
+      {loading && (
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          <CircularProgress size={24} />
+        </div>
+      )}
       <Menu
         id="basic-menu"
         anchorEl={anchorEl}
@@ -99,102 +162,58 @@ const FileMenu = ({
           },
         }}
       >
-        <MenuItem
-          sx={{
-            fontWeight: 700,
-            color: "#333",
-            "&:hover": {
-              backgroundColor: "#e0e0e0",
-            },
-          }}
-          onClick={() => {
-            selectImageRef();
-            // handleClose();
-          }}
-        >
-          <ImageIcon fontSize="small" sx={{ marginRight: 1 }} />
-          Image
-          <input
-            multiple
-            type="file"
-            accept="image/png, image/jpeg, image/gif"
-            style={{ display: "none" }}
-            onChange={(e) => handleOnFileChange(e, "image")}
-            ref={imageRef}
-          />
-        </MenuItem>
-        <MenuItem
-          sx={{
-            fontWeight: 700,
-            color: "#333",
-            "&:hover": {
-              backgroundColor: "#e0e0e0",
-            },
-          }}
-          onClick={() => {
-            selectAudioRef();
-            // handleClose();
-          }}
-        >
-          <AudiotrackIcon fontSize="small" sx={{ marginRight: 1 }} />
-          Audio
-          <input
-            multiple
-            type="file"
-            accept="audio/mpeg, audio/wav"
-            style={{ display: "none" }}
-            onChange={(e) => handleOnFileChange(e, "audio")}
-            ref={audioRef}
-          />
-        </MenuItem>
-        <MenuItem
-          sx={{
-            fontWeight: 700,
-            color: "#333",
-            "&:hover": {
-              backgroundColor: "#e0e0e0",
-            },
-          }}
-          onClick={() => {
-            selectVideoRef();
-            // handleClose();
-          }}
-        >
-          <PlayCircleIcon fontSize="small" sx={{ marginRight: 1 }} />
-          Video
-          <input
-            multiple
-            type="file"
-            accept="video/mp4, video/ogg"
-            style={{ display: "none" }}
-            onChange={(e) => handleOnFileChange(e, "video")}
-            ref={videoRef}
-          />
-        </MenuItem>
-        <MenuItem
-          sx={{
-            fontWeight: 700,
-            color: "#333",
-            "&:hover": {
-              backgroundColor: "#e0e0e0",
-            },
-          }}
-          onClick={() => {
-            selectFileRef();
-            // handleClose();
-          }}
-        >
-          <DescriptionIcon fontSize="small" sx={{ marginRight: 1 }} />
-          File
-          <input
-            multiple
-            type="file"
-            accept=".pdf, .docx, .txt"
-            style={{ display: "none" }}
-            onChange={(e) => handleOnFileChange(e, "file")}
-            ref={fileRef}
-          />
-        </MenuItem>
+        <CustomMenuItem
+          onClick={selectImageRef}
+          icon={ImageIcon}
+          text="Image"
+        />
+        <input
+          multiple
+          type="file"
+          accept="image/png, image/jpeg, image/gif"
+          style={{ display: "none" }}
+          onChange={(e) => handleOnFileChange(e, "image")}
+          ref={imageRef}
+        />
+        <CustomMenuItem
+          onClick={selectAudioRef}
+          icon={AudiotrackIcon}
+          text="Audio"
+        />
+        <input
+          multiple
+          type="file"
+          accept="audio/mpeg, audio/wav"
+          style={{ display: "none" }}
+          onChange={(e) => handleOnFileChange(e, "audio")}
+          ref={audioRef}
+        />
+        <CustomMenuItem
+          onClick={selectVideoRef}
+          icon={PlayCircleIcon}
+          text="Video"
+        />
+        <input
+          multiple
+          type="file"
+          accept="video/mp4, video/ogg"
+          style={{ display: "none" }}
+          onChange={(e) => handleOnFileChange(e, "video")}
+          ref={videoRef}
+        />
+        <CustomMenuItem
+          onClick={selectFileRef}
+          icon={DescriptionIcon}
+          text="File"
+        />
+        <input
+          multiple
+          type="file"
+          accept=".pdf, .docx, .txt"
+          style={{ display: "none" }}
+          onChange={(e) => handleOnFileChange(e, "file")}
+          ref={fileRef}
+        />
       </Menu>
     </div>
   );

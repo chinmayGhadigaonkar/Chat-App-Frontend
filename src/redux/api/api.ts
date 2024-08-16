@@ -112,8 +112,8 @@ const api = createApi({
           "Content-Type": "application/json",
           authtoken: localStorage.getItem("authtoken") || "",
         },
+        providesTags: ["Message"],
       }),
-      providesTags: ["Message"],
     }),
 
     sendAttachment: builder.mutation({

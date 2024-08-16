@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   AppBar,
   Box,
@@ -17,7 +17,7 @@ import { blue } from "@mui/material/colors";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import { useSocket } from "../../utils/SocketIo";
-import { NEW_MESSAGE } from "../../utils/event";
+import { NEW_MESSAGE, START_TYPING, STOP_TYPING } from "../../utils/event"; // Add STOP_TYPING event
 import { useChatDetailQuery, useGetMessagesQuery } from "../../redux/api/api";
 import { useSelector } from "react-redux";
 import { Message } from "../common/Message";
@@ -38,14 +38,18 @@ export default function BottomAppBar({
   chatId,
 }: BottomAppBarProps) {
   const socket = useSocket();
-  const [messages, setMessages] = React.useState([]);
-  const [page, setPage] = React.useState<number>(1);
-  const [members, setMembers] = React.useState<string[]>([]);
-  const [oldMessages, setOldMessages] = React.useState([]);
-  
+  const [messages, setMessages] = useState([]);
+  const [page, setPage] = useState<number>(1);
+  const [members, setMembers] = useState<string[]>([]);
+  const [oldMessages, setOldMessages] = useState([]);
+  const [typing, setTyping] = useState(false);
+  const [typingUser, setTypingUser] = useState<string | null>(null);
 
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const typingTimeoutRef = useRef<null>(null); // Ref to store timeout for typing
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const aopen = Boolean(anchorEl);
+
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -56,8 +60,25 @@ export default function BottomAppBar({
     const message = formData.get("chat");
     if (message) {
       socket.socket?.emit(NEW_MESSAGE, { chatId, members, message });
+      setTypingUser(null);
       e.currentTarget.reset();
     }
+  };
+
+  const handleOnChange = () => {
+    if (!typing) {
+      setTyping(true);
+      socket.socket?.emit(START_TYPING, { chatId, members });
+    }
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      setTyping(false);
+      socket.socket?.emit(STOP_TYPING, { chatId, members });
+    }, 2000); // 2 seconds timeout after last keystroke
   };
 
   const chatDetail = useChatDetailQuery({ chatId, skip: !chatId });
@@ -68,32 +89,70 @@ export default function BottomAppBar({
     { isError: oldMessagesChunk.isError, error: oldMessagesChunk.error },
   ]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (oldMessagesChunk.data) {
       setOldMessages((prev) => [...oldMessagesChunk.data.messages, ...prev]);
     }
   }, [oldMessagesChunk.data]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (chatDetail.data) {
       setMembers(chatDetail.data.chat?.members);
     }
   }, [chatDetail.data]);
 
-  const handleMessage = React.useCallback((data: any) => {
-    setMessages((prev) => [...prev, data.realTimeData]);
-  }, []);
+  const handleMessage = useCallback(
+    (data: any) => {
+      if (data.realTimeData.chat === chatId) {
+        return;
+      }
+      setMessages((prev) => [...prev, data.realTimeData]);
+    },
+    [chatId]
+  );
 
-  React.useEffect(() => {
+  const handleOnTyping = useCallback(
+    (data: any) => {
+      if (data.chatId === chatId) {
+        setTypingUser(data.user.userName);
+        // Handle typing indicator display logic here
+      }
+    },
+    [chatId]
+  );
+
+  const handleOnStopTyping = useCallback(
+    (data: any) => {
+      if (data.chatId === chatId) {
+        setTypingUser(null);
+        // Handle typing indicator display logic here
+      }
+    },
+    [chatId]
+  );
+
+  useEffect(() => {
     if (socket.socket) {
       socket.socket.on(NEW_MESSAGE, handleMessage);
+      socket.socket.on(START_TYPING, handleOnTyping);
+      socket.socket.on(STOP_TYPING, handleOnStopTyping); // Listen for STOP_TYPING event
       return () => {
         socket?.socket?.off(NEW_MESSAGE, handleMessage);
+        socket?.socket?.off(START_TYPING, handleOnTyping);
+        socket?.socket?.off(STOP_TYPING, handleOnStopTyping); // Clean up STOP_TYPING event
       };
     }
-  }, [socket.socket]);
+  }, [socket.socket, handleMessage, handleOnTyping]);
 
   const { user } = useSelector((state) => state.auth);
+  useEffect(() => {
+    return () => {
+      setMessages([]);
+      setOldMessages([]);
+      setPage(1);
+      setMembers([]);
+    };
+  }, [chatId]);
 
   if (!chatId) {
     return (
@@ -112,14 +171,21 @@ export default function BottomAppBar({
     );
   }
 
-  const fetchMoreMessages = () => {
-    setPage((prevPage) => prevPage + 1);
-    const message = useGetMessagesQuery({ chatId, page });
+  const fetchMoreMessages = async () => {
+    try {
+      setPage((prev) => prev + 1);
 
-    if (message) {
-      setOldMessages((prev) => [...prev, ...message]);
+      const { data } = await oldMessagesChunk.refetch({ chatId, page });
+
+      if (data && data.messages.length > 0) {
+        setOldMessages((prev) => [...data.messages, ...prev]);
+      }
+    } catch (error) {
+      console.error("Error fetching more messages:", error);
     }
   };
+
+  console.log("Typing User", typingUser);
 
   return (
     <React.Fragment>
@@ -133,6 +199,7 @@ export default function BottomAppBar({
           width: "100%",
         }}
       >
+        {/* AppBar and chat UI components */}
         <AppBar
           position="static"
           sx={{
@@ -168,7 +235,9 @@ export default function BottomAppBar({
           </Toolbar>
         </AppBar>
 
+        {/* Chat Messages */}
         <Box
+          id="chat-box"
           flex={1}
           sx={{
             width: "100%",
@@ -176,10 +245,9 @@ export default function BottomAppBar({
             pl: 2,
             pt: 1,
             display: "flex",
-            flexDirection: "column-reverse",
             overflowY: "auto",
+            flexDirection: "column-reverse",
           }}
-          className="chat-box"
         >
           <List
             sx={{
@@ -189,29 +257,49 @@ export default function BottomAppBar({
             subheader={<li />}
           >
             <InfiniteScroll
-              dataLength={oldMessages.length}
+              dataLength={oldMessages.length + messages.length} // Total messages count
               next={fetchMoreMessages}
               hasMore={oldMessagesChunk.data?.totalPages >= page}
-              loader={<h4>Loading.......</h4>}
-              inverse={true}
+              loader={<h4 style={{ textAlign: "center" }}>Loading.......</h4>}
+              inverse={true} // Keeps the scrolling direction as reverse
               endMessage={
                 <p style={{ textAlign: "center" }}>
                   <b>Yay! You have seen it all</b>
                 </p>
               }
-              style={{ display: "flex", flexDirection: "column-reverse" }}
               scrollableTarget="chat-box"
+              style={{ display: "flex", flexDirection: "column-reverse" }}
             >
-              {oldMessages?.map((item, index) => (
+              {oldMessages.map((item, index) => (
                 <Message messages={item} user={user} key={index} />
               ))}
             </InfiniteScroll>
             {messages.map((item, index) => (
               <Message messages={item} user={user} key={index} />
             ))}
+
+            {
+              // Typing Indicator
+              typingUser && typingUser != user.userName && (
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: "14px",
+                    color: "black",
+                    textAlign: "center",
+                    fontWeight: 600,
+                  }}
+                >
+                  {typingUser} is typing...
+                </Typography>
+              )
+            }
           </List>
+
+          {/* Typing Indicator */}
         </Box>
 
+        {/* Message Input */}
         <Box
           sx={{
             display: "flex",
@@ -260,12 +348,14 @@ export default function BottomAppBar({
                     setAnchorEl={setAnchorEl}
                     chatId={chatId}
                     setMessages={setMessages}
+                    members={members}
                   />
                   <OutlinedInput
                     placeholder="Please enter message"
                     name="chat"
                     fullWidth
                     sx={{ flex: 1, marginRight: 1 }}
+                    onChange={handleOnChange}
                   />
                   <Button
                     type="submit"

@@ -69,15 +69,18 @@ const FriendRequest = ({ model, setModel }: props) => {
     catch (error) {
     }
   }
-  return (
-    isLoading ? <div> Loading.... </div> :
-
+  return isLoading ? (
+    <div> Loading.... </div>
+  ) : (
     <BootstrapDialog
       onClose={handleClose}
       aria-labelledby="customized-dialog-title"
       open={model}
     >
-      <DialogTitle  sx={{ m: 0, p: 2 }} id="customized-dialog-title">
+      <DialogTitle
+        sx={{ m: 0, p: 2, width: "200px" }}
+        id="customized-dialog-title"
+      >
         Friends Request
       </DialogTitle>
       <IconButton
@@ -93,42 +96,39 @@ const FriendRequest = ({ model, setModel }: props) => {
         <CloseIcon />
       </IconButton>
       <DialogContent dividers>
-          <List>
-            {
-              data.allRequest.map((item: any, index) => {
-                return (
-                  <ListItem key={index}>
-                    <ListItemAvatar>
-                      <Avatar
-                        alt={item.sender.name.slice(0)}
-                        src={item.sender.avatar}
-                      />
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={item.sender.name}
-                      primaryTypographyProps={{ mx: 0 }}
-                    />
-                    <Typography
-                      variant="subtitle2"
-                      sx={{ ml: 2, color: "green", cursor: "pointer" }}
-                      onClick={() => handleAccept(item._id, true)}
-                    >
-                      {" "}
-                      Accept{" "}
-                    </Typography>
-                    <Typography
-                      variant="subtitle2"
-                      sx={{ mx: 1, color: "red", cursor: "pointer" }}
-                      onClick={() => handleAccept(item._id, false)}
-                    >
-                      {" "}
-                      Reject{" "}
-                    </Typography>
-                  </ListItem>
-                );
-              })
-            }
-         
+        <List>
+          {data.allRequest.map((item: any, index) => {
+            return (
+              <ListItem key={index}>
+                <ListItemAvatar>
+                  <Avatar
+                    alt={item.sender.name.slice(0)}
+                    src={item.sender.avatar}
+                  />
+                </ListItemAvatar>
+                <ListItemText
+                  primary={item.sender.name}
+                  primaryTypographyProps={{ mx: 0 }}
+                />
+                <Typography
+                  variant="subtitle2"
+                  sx={{ ml: 2, color: "green", cursor: "pointer" }}
+                  onClick={() => handleAccept(item._id, true)}
+                >
+                  {" "}
+                  Accept{" "}
+                </Typography>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ mx: 1, color: "red", cursor: "pointer" }}
+                  onClick={() => handleAccept(item._id, false)}
+                >
+                  {" "}
+                  Reject{" "}
+                </Typography>
+              </ListItem>
+            );
+          })}
         </List>
       </DialogContent>
       {/* <DialogActions>  */}
