@@ -17,14 +17,20 @@ import { blue } from "@mui/material/colors";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import { useSocket } from "../../utils/SocketIo";
-import { NEW_MESSAGE, START_TYPING, STOP_TYPING } from "../../utils/event"; // Add STOP_TYPING event
+import {
+  ALERT,
+  NEW_MESSAGE,
+  START_TYPING,
+  STOP_TYPING,
+} from "../../utils/event"; // Add STOP_TYPING event
 import { useChatDetailQuery, useGetMessagesQuery } from "../../redux/api/api";
-import { useSelector } from "react-redux";
-import { Message } from "../common/Message";
-import { useError } from "../../hook/hook";
+import { useDispatch, useSelector } from "react-redux";
+import { Message } from "../chat/Message";
 import SendIcon from "@mui/icons-material/Send";
 import InfiniteScroll from "react-infinite-scroll-component";
-import FileMenu from "../common/FileMenu";
+import FileMenu from "../chat/FileMenu";
+import { resetAlertMessage } from "../../redux/reducers/chat";
+import ChatSetting from "../chat/ChatSetting";
 
 type BottomAppBarProps = {
   rightSide: boolean;
@@ -44,6 +50,7 @@ export default function BottomAppBar({
   const [oldMessages, setOldMessages] = useState([]);
   const [typing, setTyping] = useState(false);
   const [typingUser, setTypingUser] = useState<string | null>(null);
+  const [alert, setAlert] = useState<string | null>(null);
 
   const typingTimeoutRef = useRef<null>(null); // Ref to store timeout for typing
 
@@ -84,10 +91,13 @@ export default function BottomAppBar({
   const chatDetail = useChatDetailQuery({ chatId, skip: !chatId });
   const oldMessagesChunk = useGetMessagesQuery({ chatId, page });
 
-  useError([{ isError: chatDetail.isError, error: chatDetail.error }]);
-  useError([
-    { isError: oldMessagesChunk.isError, error: oldMessagesChunk.error },
-  ]);
+  // useError([{ isError: chatDetail.isError, error: chatDetail.error }]);
+  // useError([
+  //   {
+  //     isError: oldMessagesChunk.isError,
+  //     error: oldMessagesChunk.error,
+  //   },
+  // ]);
 
   useEffect(() => {
     if (oldMessagesChunk.data) {
@@ -107,6 +117,18 @@ export default function BottomAppBar({
         return;
       }
       setMessages((prev) => [...prev, data.realTimeData]);
+    },
+    [chatId]
+  );
+
+  const handleOnAlert = useCallback(
+    (data: any) => {
+      console.log("Alert", data);
+      if (data.chatId === chatId) {
+        setAlert(data.message);
+      }
+
+      // setMessages((prev) => [...prev, data]);
     },
     [chatId]
   );
@@ -135,7 +157,10 @@ export default function BottomAppBar({
     if (socket.socket) {
       socket.socket.on(NEW_MESSAGE, handleMessage);
       socket.socket.on(START_TYPING, handleOnTyping);
-      socket.socket.on(STOP_TYPING, handleOnStopTyping); // Listen for STOP_TYPING event
+      socket.socket.on(STOP_TYPING, handleOnStopTyping);
+      socket.socket.on(ALERT, handleOnAlert);
+
+      // Listen for STOP_TYPING event
       return () => {
         socket?.socket?.off(NEW_MESSAGE, handleMessage);
         socket?.socket?.off(START_TYPING, handleOnTyping);
@@ -145,12 +170,15 @@ export default function BottomAppBar({
   }, [socket.socket, handleMessage, handleOnTyping]);
 
   const { user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
   useEffect(() => {
+    dispatch(resetAlertMessage(chatId));
     return () => {
       setMessages([]);
       setOldMessages([]);
       setPage(1);
       setMembers([]);
+      setAlert(null);
     };
   }, [chatId]);
 
@@ -178,14 +206,15 @@ export default function BottomAppBar({
       const { data } = await oldMessagesChunk.refetch({ chatId, page });
 
       if (data && data.messages.length > 0) {
-        setOldMessages((prev) => [...data.messages, ...prev]);
+        setOldMessages(oldMessages.concat(data.messages));
       }
     } catch (error) {
       console.error("Error fetching more messages:", error);
     }
   };
 
-  console.log("Typing User", typingUser);
+  // console.log("Typing User", typingUser);
+  console.log("Alert", alert);
 
   return (
     <React.Fragment>
@@ -232,6 +261,7 @@ export default function BottomAppBar({
                 </Typography>
               </Box>
             </Box>
+            <ChatSetting chatId={chatId} />
           </Toolbar>
         </AppBar>
 
@@ -247,6 +277,8 @@ export default function BottomAppBar({
             display: "flex",
             overflowY: "auto",
             flexDirection: "column-reverse",
+            scrollbarWidth: "thin",
+            scrollbarColor: "#095da2 #f5f5f5",
           }}
         >
           <List
@@ -256,26 +288,43 @@ export default function BottomAppBar({
             }}
             subheader={<li />}
           >
+            {alert && (
+              <Typography
+                variant="body2"
+                sx={{
+                  fontSize: "14px",
+                  color: "black",
+                  textAlign: "center",
+                  fontWeight: 600,
+                }}
+              >
+                {alert.message}
+              </Typography>
+            )}
             <InfiniteScroll
               dataLength={oldMessages.length + messages.length} // Total messages count
               next={fetchMoreMessages}
-              hasMore={oldMessagesChunk.data?.totalPages >= page}
+              hasMore={page < oldMessagesChunk.data?.totalPages} // Check if more pages are available
               loader={<h4 style={{ textAlign: "center" }}>Loading.......</h4>}
-              inverse={true} // Keeps the scrolling direction as reverse
+              // Keeps the scrolling direction as reverse
+              inverse={true}
               endMessage={
                 <p style={{ textAlign: "center" }}>
                   <b>Yay! You have seen it all</b>
                 </p>
               }
               scrollableTarget="chat-box"
-              style={{ display: "flex", flexDirection: "column-reverse" }}
+              style={{
+                display: "flex",
+                flexDirection: "column-reverse",
+              }}
             >
               {oldMessages.map((item, index) => (
-                <Message messages={item} user={user} key={index} />
+                <Message messages={item} user={user} key={item._id} />
               ))}
             </InfiniteScroll>
             {messages.map((item, index) => (
-              <Message messages={item} user={user} key={index} />
+              <Message messages={item} user={user} key={item._id} />
             ))}
 
             {

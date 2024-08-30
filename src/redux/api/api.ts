@@ -126,13 +126,119 @@ const api = createApi({
         body: data,
       }),
     }),
+
+    availableFriends: builder.query({
+      query: (chatId: String) => {
+        let url = "user/getFriends";
+        if (chatId) {
+          url = url + `?chatId=${chatId}`;
+        }
+        return {
+          url,
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            authtoken: localStorage.getItem("authtoken") || "",
+          },
+          providesTags: ["User"],
+        };
+      },
+    }),
+
+    createGroup: builder.mutation({
+      query: (data) => ({
+        url: "chats/newGroup",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authtoken: localStorage.getItem("authtoken") || "",
+        },
+        body: data,
+      }),
+      invalidatesTags: ["Chat"],
+    }),
+
+    removeMember: builder.mutation({
+      query: (data) => ({
+        url: "chats/removeMember",
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          authtoken: localStorage.getItem("authtoken") || "",
+        },
+        body: data,
+      }),
+      invalidatesTags: ["Chat"],
+    }),
+
+    addMember: builder.mutation({
+      query: (data) => ({
+        url: "chats/addMember",
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          authtoken: localStorage.getItem("authtoken") || "",
+        },
+        body: data,
+      }),
+      invalidatesTags: ["Chat"],
+    }),
+
+    leaveGroup: builder.mutation({
+      query: ({ data, userId }) => ({
+        url: `chats/leaveGroup/${userId}`,
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          authtoken: localStorage.getItem("authtoken") || "",
+        },
+        body: data,
+      }),
+      invalidatesTags: ["Chat"],
+    }),
+
+    renameGroup: builder.mutation({
+      query: (data) => ({
+        url: "chats/renameGroup",
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          authtoken: localStorage.getItem("authtoken") || "",
+        },
+        body: data,
+      }),
+      invalidatesTags: ["Chat"],
+    }),
+
+    deleteChat: builder.mutation({
+      query: (id) => ({
+        url: `chats/${id}`,
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          authtoken: localStorage.getItem("authtoken") || "",
+        },
+      }),
+      invalidatesTags: ["Message", "Chat"],
+    }),
   }),
 });
 
-
-
-
-
-export const {useGetMessagesQuery, useSendAttachmentMutation ,useChatDetailQuery,useAcceptFriendRequestMutation,useGetNotificationQuery , useGetMyChatQuery  , useSearchUserQuery , useSendFriendRequestMutation} = api;
+export const {
+  useLeaveGroupMutation,
+  useDeleteChatMutation,
+  useAddMemberMutation,
+  useRemoveMemberMutation,
+  useCreateGroupMutation,
+  useAvailableFriendsQuery,
+  useGetMessagesQuery,
+  useSendAttachmentMutation,
+  useChatDetailQuery,
+  useAcceptFriendRequestMutation,
+  useGetNotificationQuery,
+  useGetMyChatQuery,
+  useSearchUserQuery,
+  useSendFriendRequestMutation,
+} = api;
 export default api;
 

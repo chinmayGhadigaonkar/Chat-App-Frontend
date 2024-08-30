@@ -16,7 +16,7 @@ const useError = (errors: ErrorItem[] = []) => {
           fallback();
         } else {
           enqueueSnackbar(error?.message || "Something went wrong", {
-            variant: "error"
+            variant: "error",
           });
         }
       }

@@ -37,12 +37,11 @@ const SearchFriend = ({ searchmodel, setSearchmodel }: Props) => {
   const BootstrapDialog = styled(Dialog)(({ theme }) => ({
     "& .MuiDialogContent-root": {
       padding: theme.spacing(5),
-      width: "100%",
     },
     "& .MuiDialogActions-root": {
       padding: theme.spacing(5),
-      width: "100%",
     },
+    width: "100%",
   }));
 
   const handleClose = () => {
@@ -88,15 +87,12 @@ const SearchFriend = ({ searchmodel, setSearchmodel }: Props) => {
 
       if (res.data) {
         enqueueSnackbar("Friend request sent", { variant: "success" });
-      }
-      else {
+      } else {
         // console.log(res.error.data.message);
         enqueueSnackbar(res.error.data.message, { variant: "error" });
-        
       }
     } catch (error) {
-      
-      enqueueSnackbar("Something went wrong", { variant : "error" });
+      enqueueSnackbar("Something went wrong", { variant: "error" });
     }
   };
 

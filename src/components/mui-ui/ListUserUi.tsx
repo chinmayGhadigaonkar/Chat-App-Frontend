@@ -9,6 +9,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { setAlertMessage } from "../../redux/reducers/chat";
 import { useSocket } from "../../utils/SocketIo";
 import { ALERT } from "../../utils/event";
+import { StoreItemInStoreage } from "../../utils/Fetures";
+
 const style = {
   p: 0,
   width: "100%",
@@ -17,15 +19,15 @@ const style = {
   borderColor: "divider",
   backgroundColor: "background.paper",
 };
+
 interface Chat {
   groupChat: boolean;
   members: { name: string; avatar: string }[];
   avatar: string;
   name: string;
   _id: string;
-
-  // Add other properties as needed
 }
+
 interface members {
   _id: string;
   name: string;
@@ -47,11 +49,14 @@ export default function ListDividers({
   const socket = useSocket();
 
   const { data, isLoading, isError, error } = useGetMyChatQuery();
-  // console.log(data);
 
   const { AlertMessage } = useSelector((state) => state.chat);
 
   console.log("newMessageAlert", AlertMessage);
+
+  useEffect(() => {
+    StoreItemInStoreage(ALERT, AlertMessage);
+  }, [AlertMessage]);
 
   useError([{ isError, error }]);
 
@@ -61,15 +66,22 @@ export default function ListDividers({
 
   const dispatch = useDispatch();
 
-  const newMessageAlert = useCallback((data) => {
-    dispatch(setAlertMessage({chatId :data.chatId, count: 1}));
-  }, []);
+  const newMessageAlert = useCallback(
+    (data) => {
+      if (data.chatId === chatId) return;
+      dispatch(setAlertMessage({ chatId: data.chatId }));
+    },
+    [dispatch, chatId]
+  );
 
   useEffect(() => {
     socket.socket?.on(ALERT, newMessageAlert);
-  }, [chats]);
 
-  // console.log(chats);
+    // Cleanup the event listener when the component unmounts or the effect re-runs
+    return () => {
+      socket.socket?.off(ALERT, newMessageAlert);
+    };
+  }, [socket.socket, newMessageAlert]);
 
   return (
     <List
@@ -87,6 +99,8 @@ export default function ListDividers({
       ) : (
         //Chat
         chats?.map((chat, index) => {
+          const alert = AlertMessage.find((alert) => alert.chatId === chat._id);
+
           return chat.groupChat ? (
             <ListItem
               key={index}
@@ -95,7 +109,8 @@ export default function ListDividers({
                 bgcolor: chatId === chat._id ? "primary.light" : "",
               }}
               onClick={() => {
-                setRightSide(true), setChatId(chat._id);
+                setRightSide(true);
+                setChatId(chat._id);
               }}
             >
               <AvatarGroup total={chat.members.length}>
@@ -103,11 +118,15 @@ export default function ListDividers({
                 <Avatar alt="Travis Howard" src={chat.avatar[1]} />
                 <Avatar alt="Agnes Walker" src={chat.avatar[2]} />
               </AvatarGroup>
-
               <div>
                 <Typography variant="subtitle1" sx={{ pl: 2, fontWeight: 700 }}>
                   {chat.name}
                 </Typography>
+                {alert && (
+                  <Typography variant="body2" sx={{ pl: 2 }}>
+                    {`${alert.count} new message${alert.count > 1 ? "s" : ""}`}
+                  </Typography>
+                )}
               </div>
             </ListItem>
           ) : (
@@ -118,7 +137,8 @@ export default function ListDividers({
                 bgcolor: chatId === chat._id ? "primary.light" : "",
               }}
               onClick={() => {
-                setRightSide(true), setChatId(chat._id);
+                setRightSide(true);
+                setChatId(chat._id);
               }}
             >
               <Avatar
@@ -129,9 +149,11 @@ export default function ListDividers({
                 <Typography variant="subtitle1" sx={{ pl: 2, fontWeight: 700 }}>
                   {chat.name}
                 </Typography>
-                {/* <Typography variant="body2" sx={{ pl: 2 }}>
-                  Nikola Tesla joined the chat */}
-                {/* </Typography> */}
+                {alert && (
+                  <Typography variant="body2" sx={{ pl: 2 }}>
+                    {`${alert.count} new message${alert.count > 1 ? "s" : ""}`}
+                  </Typography>
+                )}
               </div>
             </ListItem>
           );

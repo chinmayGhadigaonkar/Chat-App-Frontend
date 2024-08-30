@@ -50,6 +50,7 @@ export const Message = ({ messages, user }: MessageProps) => {
                   display: "flex",
                   alignItems: "center",
                   position: "relative",
+                  color: "black",
                 }}
               >
                 {messages?.attachment?.length > 0 &&
@@ -90,7 +91,9 @@ export const Message = ({ messages, user }: MessageProps) => {
                     fontWeight: 700,
                   }}
                 >
-                  {new Date(messages.createdAt).toLocaleTimeString()}
+                  {new Date(messages.createdAt).toDateString() +
+                    " " +
+                    new Date(messages.createdAt).toLocaleTimeString()}
                 </Typography>
               </Box>
             </Box>
@@ -128,7 +131,7 @@ export const Message = ({ messages, user }: MessageProps) => {
                   </Avatar>
 
                   <ListItemText
-                    primary={messages.sender.name}
+                    primary={messages.sender?.name}
                     primaryTypographyProps={{
                       fontSize: 12,
                       color: "red",
@@ -179,7 +182,9 @@ export const Message = ({ messages, user }: MessageProps) => {
                     fontWeight: 700,
                   }}
                 >
-                  {new Date(messages.createdAt).toLocaleTimeString()}
+                  {new Date(messages.createdAt).toDateString() +
+                    " " +
+                    new Date(messages.createdAt).toLocaleTimeString()}
                 </Typography>
               </Box>
             </Box>

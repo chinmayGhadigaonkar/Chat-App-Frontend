@@ -19,6 +19,9 @@ import { useDispatch } from "react-redux";
 import { logout } from "../../redux/reducers/auth";
 import { enqueueSnackbar } from "notistack";
 import SearchFriend from "../../pages/SearchFriend";
+import AddIcon from "@mui/icons-material/Add";
+import { Add } from "@mui/icons-material";
+import CreateGroup from "../../pages/CreateNewGroup";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -79,7 +82,7 @@ export default function SearchAppBar() {
     setAnchorEl(null);
   };
 
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   const handleonlogout = () => {
     enqueueSnackbar("Logout successful", { variant: "success" });
     dispatch(logout());
@@ -106,8 +109,15 @@ export default function SearchAppBar() {
   const [searchmodel, setSearchmodel] = React.useState(false);
 
   const handleClicksearchmodel = () => {
-    setSearchmodel(true)
-  }
+    setSearchmodel(true);
+  };
+
+  // create group model
+
+  const [createGroupmodel, setcreateGroupmodel] = React.useState(false);
+  const handleClickcreategroupmodel = () => {
+    setcreateGroupmodel(true);
+  };
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -167,6 +177,19 @@ export default function SearchAppBar() {
             <MenuItem
               sx={{ fontWeight: 700 }}
               onClick={() => {
+                handleClose();
+                handleClickcreategroupmodel();
+              }}
+            >
+              Create Group
+              <span>
+                {"  "}
+                <Add fontSize="small" sx={{ ml: 1, mt: 1 }} />
+              </span>
+            </MenuItem>
+            <MenuItem
+              sx={{ fontWeight: 700 }}
+              onClick={() => {
                 handleClose(), handleClickmodel();
               }}
             >
@@ -199,6 +222,12 @@ export default function SearchAppBar() {
             searchmodel={searchmodel}
             setSearchmodel={setSearchmodel}
           />
+
+          <CreateGroup
+            createGroupmodel={createGroupmodel}
+            setcreateGroupmodel={setcreateGroupmodel}
+          />
+
           {/* <Search>
             <SearchIconWrapper>
               <SearchIcon />

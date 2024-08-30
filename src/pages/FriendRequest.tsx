@@ -46,29 +46,27 @@ const FriendRequest = ({ model, setModel }: props) => {
     "& .MuiDialogActions-root": {
       padding: theme.spacing(1),
     },
+    width: "100%",
   }));
   const handleClose = () => {
     setModel(false);
   };
 
-  
-  const [AcceptReq] =useAcceptFriendRequestMutation();
- 
-  const handleAccept = async(id: string, accept: boolean) => {
+  const [AcceptReq] = useAcceptFriendRequestMutation();
+
+  const handleAccept = async (id: string, accept: boolean) => {
     try {
       const data = { userId: id, accept: accept };
       console.log(data);
-      
+
       const res = await AcceptReq(data);
       console.log(res.data);
-      
+
       if (res.data.success) {
         enqueueSnackbar("Request accepted", { variant: "success" });
       }
-    }
-    catch (error) {
-    }
-  }
+    } catch (error) {}
+  };
   return isLoading ? (
     <div> Loading.... </div>
   ) : (
@@ -97,7 +95,7 @@ const FriendRequest = ({ model, setModel }: props) => {
       </IconButton>
       <DialogContent dividers>
         <List>
-          {data.allRequest.map((item: any, index) => {
+          {data?.allRequest?.map((item: any, index) => {
             return (
               <ListItem key={index}>
                 <ListItemAvatar>
