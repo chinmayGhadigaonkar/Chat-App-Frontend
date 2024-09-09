@@ -1,18 +1,7 @@
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import {
-  Divider,
-  Drawer,
-  IconButton,
-  Menu,
-  MenuItem,
-  Tooltip,
-} from "@mui/material";
+import { Drawer, IconButton, Menu, MenuItem, Tooltip } from "@mui/material";
 import React from "react";
-import {
-  useAvailableFriendsQuery,
-  useDeleteChatMutation,
-} from "../../redux/api/api";
-import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import { useDeleteChatMutation } from "../../redux/api/api";
 import ChatDetails from "./ChatDetail";
 import { enqueueSnackbar } from "notistack";
 type Props = {
@@ -35,7 +24,6 @@ const ChatSetting = ({ chatId }: Props) => {
   // console.log(chatId);
 
   const [deleteChat] = useDeleteChatMutation();
-  const navigator = window.location;
 
   const handleOnDeleteChat = async () => {
     alert("Are you sure you want to delete this chat?");
@@ -52,7 +40,7 @@ const ChatSetting = ({ chatId }: Props) => {
         enqueueSnackbar(errorMessage, { variant: "error" });
       }
     } catch (error) {
-      const errorMessage = error?.data?.message || "Failed to delete chat";
+      const errorMessage = "Failed to delete chat";
       enqueueSnackbar(errorMessage, { variant: "error" });
     }
   };
