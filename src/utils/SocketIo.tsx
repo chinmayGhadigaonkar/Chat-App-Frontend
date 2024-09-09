@@ -8,11 +8,15 @@ const SocketContext = createContext<SocketContextType | null>(null);
 
 
 const SocketProvider = ({ children }: {children: React.ReactNode}) => {
-  const socket = useMemo(() => io("http://localhost:3000", {
-    auth: {
-      token: localStorage.getItem("authtoken")
-    }
-  }), []);
+  const socket = useMemo(
+    () =>
+      io("https://chat-app-backend-z66y.onrender.com/", {
+        auth: {
+          token: localStorage.getItem("authtoken"),
+        },
+      }),
+    []
+  );
 
   return (
     <SocketContext.Provider value={{ socket }}>
