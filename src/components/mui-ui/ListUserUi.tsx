@@ -8,7 +8,7 @@ import { useError } from "../../hook/hook";
 import { useDispatch, useSelector } from "react-redux";
 import { setAlertMessage } from "../../redux/reducers/chat";
 import { useSocket } from "../../utils/SocketIo";
-import { ALERT } from "../../utils/event";
+import { ALERT, REFETCH_CHAT } from "../../utils/event";
 import { StoreItemInStoreage } from "../../utils/Fetures";
 
 const style = {
@@ -48,11 +48,9 @@ export default function ListDividers({
   const [chats, setChats] = React.useState<Chat[]>([]);
   const socket = useSocket();
 
-  const { data, isLoading, isError, error } = useGetMyChatQuery();
+  const { data, isLoading, isError, error, refetch } = useGetMyChatQuery();
 
   const { AlertMessage } = useSelector((state) => state.chat);
-
-  console.log("newMessageAlert", AlertMessage);
 
   useEffect(() => {
     StoreItemInStoreage(ALERT, AlertMessage);
@@ -73,6 +71,9 @@ export default function ListDividers({
     },
     [dispatch, chatId]
   );
+  const handleOnRefetch = (data: any) => {
+    refetch();
+  };
 
   useEffect(() => {
     socket.socket?.on(ALERT, newMessageAlert);
@@ -82,6 +83,13 @@ export default function ListDividers({
       socket.socket?.off(ALERT, newMessageAlert);
     };
   }, [socket.socket, newMessageAlert]);
+  useEffect(() => {
+    socket.socket?.on(REFETCH_CHAT, handleOnRefetch);
+
+    return () => {
+      socket.socket?.off(REFETCH_CHAT, handleOnRefetch);
+    };
+  }, [socket.socket, handleOnRefetch]);
 
   return (
     <List

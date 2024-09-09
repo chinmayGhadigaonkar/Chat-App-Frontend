@@ -51,7 +51,7 @@ const ChatDetails = ({ chatId }: Props) => {
 
       if (res.data.success) {
         enqueueSnackbar("Member Removed", { variant: "success" });
-        chatIdMembersData.refetch();
+        // chatIdMembersData.refetch();
       } else {
         enqueueSnackbar(res.data.message, {
           variant: "error",

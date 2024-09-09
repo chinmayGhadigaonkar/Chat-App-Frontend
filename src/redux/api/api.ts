@@ -112,7 +112,7 @@ const api = createApi({
           "Content-Type": "application/json",
           authtoken: localStorage.getItem("authtoken") || "",
         },
-        providesTags: ["Message"],
+        keepUnusedDataFor: 0,
       }),
     }),
 
@@ -181,7 +181,7 @@ const api = createApi({
         },
         body: data,
       }),
-      invalidatesTags: ["Chat"],
+      invalidatesTags: ["Chat", "User", "Message"],
     }),
 
     leaveGroup: builder.mutation({
@@ -194,20 +194,7 @@ const api = createApi({
         },
         body: data,
       }),
-      invalidatesTags: ["Chat"],
-    }),
-
-    renameGroup: builder.mutation({
-      query: (data) => ({
-        url: "chats/renameGroup",
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          authtoken: localStorage.getItem("authtoken") || "",
-        },
-        body: data,
-      }),
-      invalidatesTags: ["Chat"],
+      invalidatesTags: ["Chat", "Message"],
     }),
 
     deleteChat: builder.mutation({

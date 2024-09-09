@@ -20,6 +20,7 @@ import { useSocket } from "../../utils/SocketIo";
 import {
   ALERT,
   NEW_MESSAGE,
+  REFETCH_CHAT,
   START_TYPING,
   STOP_TYPING,
 } from "../../utils/event"; // Add STOP_TYPING event
@@ -113,10 +114,11 @@ export default function BottomAppBar({
 
   const handleMessage = useCallback(
     (data: any) => {
-      if (data.realTimeData.chat === chatId) {
-        return;
+      // console.log("Message", data);
+
+      if (data.chatId === chatId) {
+        setMessages((prev) => [...prev, data.realTimeData]);
       }
-      setMessages((prev) => [...prev, data.realTimeData]);
     },
     [chatId]
   );
@@ -153,34 +155,58 @@ export default function BottomAppBar({
     [chatId]
   );
 
+  // const handleOnRefetch = (data: any) => {
+  //   console.log(data);
+
+  //   if (data.chatId === chatId) {
+  //     oldMessagesChunk.refetch();
+  //   }
+  // };
+
   useEffect(() => {
     if (socket.socket) {
       socket.socket.on(NEW_MESSAGE, handleMessage);
       socket.socket.on(START_TYPING, handleOnTyping);
       socket.socket.on(STOP_TYPING, handleOnStopTyping);
       socket.socket.on(ALERT, handleOnAlert);
+      // socket.socket.on(REFETCH_CHAT, handleOnRefetch);
 
-      // Listen for STOP_TYPING event
       return () => {
         socket?.socket?.off(NEW_MESSAGE, handleMessage);
         socket?.socket?.off(START_TYPING, handleOnTyping);
-        socket?.socket?.off(STOP_TYPING, handleOnStopTyping); // Clean up STOP_TYPING event
+        socket?.socket?.off(STOP_TYPING, handleOnStopTyping);
+        socket?.socket?.off(ALERT, handleOnAlert);
+        // socket?.socket?.off(REFETCH_CHAT, handleOnRefetch);
       };
     }
-  }, [socket.socket, handleMessage, handleOnTyping]);
+  }, [
+    socket.socket,
+    handleMessage,
+    handleOnTyping,
+    handleOnStopTyping,
+    handleOnAlert,
+    // handleOnRefetch,
+  ]);
 
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
+  useEffect(
+    () => () => {
+      dispatch(resetAlertMessage(chatId));
+    },
+    [chatId, dispatch]
+  );
+
   useEffect(() => {
-    dispatch(resetAlertMessage(chatId));
     return () => {
-      setMessages([]);
       setOldMessages([]);
+      setMessages([]);
       setPage(1);
       setMembers([]);
       setAlert(null);
+      setTypingUser(null);
     };
-  }, [chatId]);
+  }, [chatId, dispatch]);
 
   if (!chatId) {
     return (
@@ -214,7 +240,7 @@ export default function BottomAppBar({
   };
 
   // console.log("Typing User", typingUser);
-  console.log("Alert", alert);
+  // console.log("Alert", alert);
 
   return (
     <React.Fragment>

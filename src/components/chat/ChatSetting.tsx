@@ -45,7 +45,8 @@ const ChatSetting = ({ chatId }: Props) => {
 
       if (res.data?.success) {
         enqueueSnackbar("Chat deleted successfully", { variant: "success" });
-        navigator.reload();
+        // navigator.reload();
+        window.location.reload();
       } else {
         const errorMessage = res.data?.message || "Failed to delete chat";
         enqueueSnackbar(errorMessage, { variant: "error" });
