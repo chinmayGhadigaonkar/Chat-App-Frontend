@@ -16,6 +16,8 @@ import { enqueueSnackbar } from "notistack";
 import FetchRequest from "../utils/FetchRequest";
 import { VITE_BACKEND_URL } from "../utils/Backend_Url";
 import { useNavigate } from "react-router-dom";
+import { FilledInput } from "@mui/material";
+import styled from "@emotion/styled";
 
 function Copyright(props: any) {
   return (
@@ -40,23 +42,30 @@ const defaultTheme = createTheme();
 
 export default function SignUp() {
   const naviagate = useNavigate();
-  const handleSubmit = async(event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    if(data.get("userName") === "" || data.get("password") === "" || data.get("firstName") === "" || data.get("lastName") === "" || data.get("bio") === "" || data.get("avatar") === ""){
+    if (
+      data.get("userName") === "" ||
+      data.get("password") === "" ||
+      data.get("firstName") === "" ||
+      data.get("lastName") === "" ||
+      data.get("bio") === "" ||
+      data.get("avatar") === ""
+    ) {
       enqueueSnackbar("Please fill in all fields", { variant: "error" });
       return;
     }
-      console.log({
+    console.log({
       firstName: data.get("firstName"),
       lastName: data.get("lastName"),
       userName: data.get("userName"),
       password: data.get("password"),
       bio: data.get("bio"),
       avatar: data.get("avatar"),
-      });
+    });
     const RegisterData = {
-      name: data.get("firstName")+ " " + data.get("lastName"),
+      name: data.get("firstName") + " " + data.get("lastName"),
       userName: data.get("userName"),
       password: data.get("password"),
       bio: data.get("bio"),
@@ -78,7 +87,6 @@ export default function SignUp() {
       const success = response.data.success;
 
       if (success) {
-        
         naviagate("/login");
         enqueueSnackbar("Register successful", { variant: "success" });
       }
@@ -167,13 +175,14 @@ export default function SignUp() {
                 />
               </Grid>
               <Grid item xs={12}>
-                <TextField
+                <CustomeFileInput
                   required
                   fullWidth
                   name="avatar"
-                  label="avatar"
+                  aria-label="avatar"
                   type="file"
                   id="avatar"
+                  inputProps={{ accept: "image/png, image/gif, image/jpeg" }}
                 />
               </Grid>
             </Grid>
@@ -199,3 +208,18 @@ export default function SignUp() {
     </ThemeProvider>
   );
 }
+
+const CustomeFileInput = styled(FilledInput)({
+  backgroundColor: "white",
+  "MuiFilledInput-input": {
+    padding: "10px",
+    backgroundColor: "white",
+  },
+
+  ":hover": {
+    backgroundColor: "white",
+  },
+  ":focus": {
+    backgroundColor: "white",
+  },
+});

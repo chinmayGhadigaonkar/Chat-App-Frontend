@@ -36,7 +36,7 @@ export default function SignIn() {
         {...props}
       >
         {"Copyright © "}
-        <Link color="inherit" href="https://mui.com/">
+        <Link color="inherit" href="#">
           Chat App
         </Link>{" "}
         {new Date().getFullYear()}
@@ -125,10 +125,7 @@ export default function SignIn() {
               id="password"
               autoComplete="current-password"
             />
-            <FormControlLabel
-              control={<Checkbox value="remember" color="primary" />}
-              label="Remember me"
-            />
+
             <Button
               type="submit"
               fullWidth
