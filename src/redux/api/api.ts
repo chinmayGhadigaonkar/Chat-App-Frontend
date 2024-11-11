@@ -155,7 +155,7 @@ const api = createApi({
         },
         body: data,
       }),
-      invalidatesTags: ["Chat"],
+      invalidatesTags: ["Chat", "User"],
     }),
 
     removeMember: builder.mutation({
