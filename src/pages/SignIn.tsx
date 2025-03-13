@@ -14,18 +14,17 @@ import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { VITE_BACKEND_URL } from "../utils/Backend_Url";
 import FetchRequest from "../utils/FetchRequest";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { login } from "../redux/reducers/auth";
 import { useNavigate } from "react-router-dom";
 import { enqueueSnackbar } from "notistack";
 
-
 const defaultTheme = createTheme();
 
 export default function SignIn() {
-  const { user, authtoken, loading } = useSelector((state: any) => state.auth);
+  const [loading, setLoading] = React.useState(false);
   const dispatch = useDispatch();
-  const naviagate = useNavigate()
+  const naviagate = useNavigate();
 
   function Copyright(props: any) {
     return (
@@ -46,10 +45,9 @@ export default function SignIn() {
   }
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     const data = new FormData(event.currentTarget);
     if (data.get("userName") === "" || data.get("password") === "") {
-      enqueueSnackbar("Please fill in all fields", { variant: "error" });
+      enqueueSnackbar("Please fill all fields", { variant: "error" });
       return;
     }
 
@@ -57,6 +55,7 @@ export default function SignIn() {
       userName: data.get("userName"),
       password: data.get("password"),
     };
+    setLoading(true);
 
     try {
       const response = await FetchRequest.post(
@@ -69,19 +68,22 @@ export default function SignIn() {
 
       if (success) {
         dispatch(login(response.data));
-        naviagate("/")
+        naviagate("/");
         enqueueSnackbar("Login successful", { variant: "success" });
+      } else {
+        enqueueSnackbar("Login Failed", { variant: "error" });
       }
       // Handle success (e.g., redirect, show message)
     } catch (error) {
       console.error("Login failed:", error);
       // Handle error (e.g., show error message)
+      enqueueSnackbar("Login failed", { variant: "error" });
+    } finally {
+      setLoading(false);
     }
   };
 
-  return loading ? (
-    <>Loading</>
-  ) : (
+  return (
     <ThemeProvider theme={defaultTheme}>
       <Container component="main" maxWidth="xs">
         <CssBaseline />
@@ -107,33 +109,37 @@ export default function SignIn() {
           >
             <TextField
               margin="normal"
-              required
               fullWidth
               id="userName"
               label="Username"
               name="userName"
               autoComplete="userName"
               autoFocus
+              required={true}
             />
             <TextField
               margin="normal"
-              required
               fullWidth
               name="password"
               label="Password"
               type="password"
               id="password"
               autoComplete="current-password"
+              required={true}
             />
 
             <Button
               type="submit"
               fullWidth
               variant="contained"
-              sx={{ mt: 3, mb: 2 }}
+              sx={{
+                mt: 3,
+                mb: 2,
+                ":disabled": { color: "black", fontWeight: "900" },
+              }}
               disabled={loading}
             >
-              Sign In
+              {!loading ? "Sign In" : "Loading..."}
             </Button>
             <Grid container>
               <Grid item sx={{ margin: "0 auto", textAlign: "center" }}>

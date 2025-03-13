@@ -42,6 +42,7 @@ const defaultTheme = createTheme();
 
 export default function SignUp() {
   const naviagate = useNavigate();
+  const [loading, setLoading] = React.useState(false);
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
@@ -71,7 +72,7 @@ export default function SignUp() {
       bio: data.get("bio"),
       avatar: data.get("avatar"),
     };
-
+    setLoading(true);
     try {
       const response = await FetchRequest.post(
         `${VITE_BACKEND_URL}/user/registeruser`,
@@ -94,6 +95,8 @@ export default function SignUp() {
     } catch (error) {
       console.error("Login failed:", error);
       // Handle error (e.g., show error message)
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -189,10 +192,15 @@ export default function SignUp() {
             <Button
               type="submit"
               fullWidth
+              disabled={loading}
               variant="contained"
-              sx={{ mt: 3, mb: 2 }}
+              sx={{
+                mt: 3,
+                mb: 2,
+                ":disabled": { color: "black", fontWeight: "900" },
+              }}
             >
-              Sign Up
+              {loading ? "Loading ..." : "Sign Up"}
             </Button>
             <Grid container justifyContent="center">
               <Grid item>
