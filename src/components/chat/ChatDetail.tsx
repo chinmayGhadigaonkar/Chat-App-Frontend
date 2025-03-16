@@ -17,7 +17,6 @@ import {
   useLeaveGroupMutation,
   useRemoveMemberMutation,
 } from "../../redux/api/api";
-import LogoutIcon from "@mui/icons-material/Logout";
 import { enqueueSnackbar } from "notistack";
 import AddMemberList from "./Member";
 import { useState } from "react";
@@ -96,7 +95,7 @@ const ChatDetails = ({ chatId }: Props) => {
     setaddMembermodel(true);
   };
 
-  return chatDetail.isLoading || chatDetail.isError ? (
+  return chatDetail.isLoading ? (
     <Box>Loading...</Box>
   ) : chatDetail.isError ? (
     <Box>Error</Box>
@@ -123,7 +122,7 @@ const ChatDetails = ({ chatId }: Props) => {
         </Avatar>
 
         <Box sx={{ mt: 2 }}>
-          <h3>{chatDetail.data.chat.name}</h3>
+          <h3>{chatDetail.data?.chat?.name as string}</h3>
         </Box>
 
         <Box sx={{ mt: 2 }}>

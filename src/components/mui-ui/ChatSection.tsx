@@ -280,10 +280,11 @@ export default function BottomAppBar({
                   variant="subtitle1"
                   sx={{ fontSize: 25, color: "black", fontWeight: 900 }}
                 >
-                  {chatDetail.data?.chat.name
-                    .charAt(0)
-                    .toUpperCase()
-                    .slice(0, 1) + chatDetail.data?.chat.name.slice(1)}
+                  {chatDetail.data &&
+                    chatDetail.data?.chat.name
+                      .charAt(0)
+                      .toUpperCase()
+                      .slice(0, 1) + chatDetail.data?.chat.name.slice(1)}
                 </Typography>
               </Box>
             </Box>

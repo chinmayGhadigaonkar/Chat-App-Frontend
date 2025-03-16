@@ -3,30 +3,11 @@ import ListDividers from "../components/mui-ui/ListUserUi";
 import { Box } from "@mui/material";
 import Chat from "./Chat";
 import { useState } from "react";
-import { useSocket } from "../utils/SocketIo";
-
-
-interface members {
-  name: String
-  avatar:String
-  
-}
 
 const Home = () => {
   const [rightSide, setRightSide] = useState<boolean>(false);
-  // const socket = useSocket()
 
-  // console.log(socket.socket?.id)
-
-  
-  const [chatId, setChatId] = useState<string>('')
-  // const [members, setMembers] = useState<members[]>([])
-
-  // console.log("Chat ID"+chatId);
-  // console.log("members" , members);    
-  
-  
-
+  const [chatId, setChatId] = useState<string>("");
 
   return (
     <Box

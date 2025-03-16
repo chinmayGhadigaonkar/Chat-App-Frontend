@@ -68,7 +68,7 @@ const FriendRequest = ({ model, setModel }: props) => {
     } catch (error) {}
   };
   return isLoading ? (
-    <div> Loading.... </div>
+    <div> </div>
   ) : (
     <BootstrapDialog
       onClose={handleClose}

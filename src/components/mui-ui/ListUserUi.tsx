@@ -1,6 +1,12 @@
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
-import { Avatar, AvatarGroup, Skeleton, Typography } from "@mui/material";
+import {
+  Avatar,
+  AvatarGroup,
+  Paper,
+  Skeleton,
+  Typography,
+} from "@mui/material";
 import { deepOrange } from "@mui/material/colors";
 import React, { useCallback, useEffect } from "react";
 import { useGetMyChatQuery } from "../../redux/api/api";
@@ -103,7 +109,92 @@ export default function ListDividers({
       }}
     >
       {isLoading ? (
-        <Skeleton variant="rectangular" width="100%" height={118} />
+        <List sx={{ height: "500px", boder: "2px solid black" }}>
+          <Paper
+            sx={{
+              display: "flex",
+              alignItems: "center", // Fixes alignment
+              py: "12px",
+              gap: 2, // Adds consistent spacing between items
+              boxShadow: "none",
+              border: "none",
+            }}
+          >
+            <Skeleton
+              variant="circular"
+              sx={{
+                width: "30px",
+                height: "30px",
+                mx: 1,
+              }}
+            />
+            <Skeleton
+              variant="rectangular"
+              sx={{
+                fontWeight: 700,
+                width: "16rem",
+                borderRadius: "10px",
+                height: "20px", // Add height for better consistency
+              }}
+            />
+          </Paper>
+          <Paper
+            sx={{
+              display: "flex",
+              alignItems: "center", // Fixes alignment
+              py: "12px",
+              gap: 2, // Adds consistent spacing between items
+              boxShadow: "none",
+              border: "none",
+            }}
+          >
+            <Skeleton
+              variant="circular"
+              sx={{
+                width: "30px",
+                height: "30px",
+                mx: 1,
+              }}
+            />
+            <Skeleton
+              variant="rectangular"
+              sx={{
+                fontWeight: 700,
+                width: "16rem",
+                borderRadius: "10px",
+                height: "20px", // Add height for better consistency
+              }}
+            />
+          </Paper>
+          <Paper
+            sx={{
+              display: "flex",
+              alignItems: "center", // Fixes alignment
+              py: "12px",
+              gap: 2, // Adds consistent spacing between items
+              boxShadow: "none",
+              border: "none",
+            }}
+          >
+            <Skeleton
+              variant="circular"
+              sx={{
+                width: "30px",
+                height: "30px",
+                mx: 1,
+              }}
+            />
+            <Skeleton
+              variant="rectangular"
+              sx={{
+                fontWeight: 700,
+                width: "16rem",
+                borderRadius: "10px",
+                height: "20px", // Add height for better consistency
+              }}
+            />
+          </Paper>
+        </List>
       ) : (
         //Chat
         chats?.map((chat, index) => {
